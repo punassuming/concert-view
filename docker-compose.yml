@@ -1,0 +1,44 @@
+services:
+  api:
+    build: ./api
+    ports:
+      - "8000:8000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - UPLOAD_DIR=/data/uploads
+      - OUTPUT_DIR=/data/output
+    volumes:
+      - upload-data:/data/uploads
+      - output-data:/data/output
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  processor:
+    build: ./processor
+    environment:
+      - API_URL=http://api:8000
+      - UPLOAD_DIR=/data/uploads
+      - OUTPUT_DIR=/data/output
+    volumes:
+      - upload-data:/data/uploads
+      - output-data:/data/output
+    depends_on:
+      api:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    depends_on:
+      - api
+
+volumes:
+  upload-data:
+  output-data:
