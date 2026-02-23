@@ -3,14 +3,14 @@ import { getLayouts, createLayout, updateLayout, deleteLayout, suggestLayout } f
 
 const PRESETS = {
   Grid: [
-    { x: 0, y: 0, width: 50, height: 50 },
-    { x: 50, y: 0, width: 50, height: 50 },
-    { x: 0, y: 50, width: 50, height: 50 },
-    { x: 50, y: 50, width: 50, height: 50 },
+    { feed_id: 'feed-1', x: 0, y: 0, width: 0.5, height: 0.5 },
+    { feed_id: 'feed-2', x: 0.5, y: 0, width: 0.5, height: 0.5 },
+    { feed_id: 'feed-3', x: 0, y: 0.5, width: 0.5, height: 0.5 },
+    { feed_id: 'feed-4', x: 0.5, y: 0.5, width: 0.5, height: 0.5 },
   ],
   'Picture-in-Picture': [
-    { x: 0, y: 0, width: 100, height: 100 },
-    { x: 70, y: 70, width: 28, height: 28 },
+    { feed_id: 'feed-1', x: 0, y: 0, width: 1, height: 1 },
+    { feed_id: 'feed-2', x: 0.7, y: 0.7, width: 0.28, height: 0.28 },
   ],
 }
 
@@ -35,12 +35,12 @@ export default function LayoutEditor() {
   }
 
   function addSlot() {
-    setSlots([...slots, { x: 0, y: 0, width: 50, height: 50 }])
+    setSlots([...slots, { feed_id: `feed-${slots.length + 1}`, x: 0, y: 0, width: 0.5, height: 0.5 }])
   }
 
   function updateSlot(index, field, value) {
     const updated = slots.map((s, i) =>
-      i === index ? { ...s, [field]: Number(value) } : s
+      i === index ? { ...s, [field]: Number(value) / 100 } : s
     )
     setSlots(updated)
   }
@@ -78,11 +78,11 @@ export default function LayoutEditor() {
 
   async function handleSuggest() {
     try {
-      const result = await suggestLayout({ feed_count: 4 })
+      const result = await suggestLayout({ feed_count: 4, style: 'grid' })
       setSuggestResult(result)
-      if (result.slots) {
-        setSlots(result.slots)
-        setLayoutName(result.name || 'AI Suggested')
+      if (result.layout && result.layout.slots) {
+        setSlots(result.layout.slots)
+        setLayoutName(result.layout.name || 'AI Suggested')
       }
     } catch (err) {
       setError(err.message)
@@ -99,10 +99,10 @@ export default function LayoutEditor() {
               key={i}
               className="layout-slot"
               style={{
-                left: `${slot.x}%`,
-                top: `${slot.y}%`,
-                width: `${slot.width}%`,
-                height: `${slot.height}%`,
+                left: `${slot.x * 100}%`,
+                top: `${slot.y * 100}%`,
+                width: `${slot.width * 100}%`,
+                height: `${slot.height * 100}%`,
               }}
             >
               Slot {i + 1}
@@ -144,19 +144,19 @@ export default function LayoutEditor() {
               <div className="slot-controls">
                 <div className="form-group">
                   <label>X (%)</label>
-                  <input type="number" min="0" max="100" value={slot.x} onChange={(e) => updateSlot(i, 'x', e.target.value)} />
+                  <input type="number" min="0" max="100" value={Math.round(slot.x * 100)} onChange={(e) => updateSlot(i, 'x', e.target.value)} />
                 </div>
                 <div className="form-group">
                   <label>Y (%)</label>
-                  <input type="number" min="0" max="100" value={slot.y} onChange={(e) => updateSlot(i, 'y', e.target.value)} />
+                  <input type="number" min="0" max="100" value={Math.round(slot.y * 100)} onChange={(e) => updateSlot(i, 'y', e.target.value)} />
                 </div>
                 <div className="form-group">
                   <label>Width (%)</label>
-                  <input type="number" min="1" max="100" value={slot.width} onChange={(e) => updateSlot(i, 'width', e.target.value)} />
+                  <input type="number" min="1" max="100" value={Math.round(slot.width * 100)} onChange={(e) => updateSlot(i, 'width', e.target.value)} />
                 </div>
                 <div className="form-group">
                   <label>Height (%)</label>
-                  <input type="number" min="1" max="100" value={slot.height} onChange={(e) => updateSlot(i, 'height', e.target.value)} />
+                  <input type="number" min="1" max="100" value={Math.round(slot.height * 100)} onChange={(e) => updateSlot(i, 'height', e.target.value)} />
                 </div>
               </div>
             </div>
@@ -202,10 +202,10 @@ export default function LayoutEditor() {
                       key={i}
                       className="layout-slot"
                       style={{
-                        left: `${slot.x}%`,
-                        top: `${slot.y}%`,
-                        width: `${slot.width}%`,
-                        height: `${slot.height}%`,
+                        left: `${(slot.x || 0) * 100}%`,
+                        top: `${(slot.y || 0) * 100}%`,
+                        width: `${(slot.width || 0.25) * 100}%`,
+                        height: `${(slot.height || 0.25) * 100}%`,
                       }}
                     >
                       {i + 1}

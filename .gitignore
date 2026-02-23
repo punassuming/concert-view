@@ -9,11 +9,13 @@ build/
 *.egg
 .venv/
 venv/
+.pytest_cache/
 
 # Node
 node_modules/
 frontend/dist/
 frontend/build/
+package-lock.json
 
 # Environment
 .env
