@@ -1,4 +1,13 @@
 services:
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   api:
     build: ./api
     ports:
@@ -8,9 +17,14 @@ services:
       - GEMINI_API_KEY=${GEMINI_API_KEY:-}
       - UPLOAD_DIR=/data/uploads
       - OUTPUT_DIR=/data/output
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
     volumes:
       - upload-data:/data/uploads
       - output-data:/data/output
+    depends_on:
+      redis:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
@@ -23,10 +37,14 @@ services:
       - API_URL=http://api:8000
       - UPLOAD_DIR=/data/uploads
       - OUTPUT_DIR=/data/output
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
     volumes:
       - upload-data:/data/uploads
       - output-data:/data/output
     depends_on:
+      redis:
+        condition: service_healthy
       api:
         condition: service_healthy
 

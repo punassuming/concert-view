@@ -11,4 +11,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-CMD ["python", "-m", "processor.main"]
+CMD ["celery", "-A", "processor.celery_app", "worker", "--loglevel=info"]
