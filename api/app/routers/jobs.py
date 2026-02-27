@@ -34,6 +34,19 @@ class OptimizeJobRequest(BaseModel):
     noise_reduce: bool = False
 
 
+SOCIAL_FORMATS = {
+    "landscape_1080p": {"width": 1920, "height": 1080},
+    "portrait_1080p": {"width": 1080, "height": 1920},
+    "square_1080": {"width": 1080, "height": 1080},
+}
+
+
+class ExportJobRequest(BaseModel):
+    input_path: str
+    output_filename: str
+    format: str = "landscape_1080p"
+
+
 @router.post("/compose", status_code=202)
 async def dispatch_compose(body: ComposeJobRequest) -> dict:
     """Dispatch a video composition job to the Celery worker."""
@@ -64,6 +77,27 @@ async def dispatch_optimize(body: OptimizeJobRequest) -> dict:
         args=[body.input_path, output_path, body.normalize, body.noise_reduce],
     )
     return {"job_id": task.id, "state": "PENDING"}
+
+
+@router.post("/export", status_code=202)
+async def dispatch_export(body: ExportJobRequest) -> dict:
+    """Dispatch a social-media export job to the Celery worker.
+
+    Supported formats: landscape_1080p (16:9), portrait_1080p (9:16), square_1080 (1:1).
+    """
+    if body.format not in SOCIAL_FORMATS:
+        from fastapi import HTTPException
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unknown format '{body.format}'. Choose from: {', '.join(SOCIAL_FORMATS)}",
+        )
+    dimensions = SOCIAL_FORMATS[body.format]
+    output_path = os.path.join(settings.OUTPUT_DIR, body.output_filename)
+    task = celery_app.send_task(
+        "processor.celery_app.export_task",
+        args=[body.input_path, output_path, dimensions["width"], dimensions["height"]],
+    )
+    return {"job_id": task.id, "state": "PENDING", "format": body.format}
 
 
 @router.get("/{job_id}")

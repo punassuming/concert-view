@@ -13,7 +13,7 @@ from app.services.layout_service import generate_grid_layout, generate_pip_layou
 logger = logging.getLogger(__name__)
 
 _SYSTEM_PROMPT = (
-    "You are a video layout designer for a multi-camera concert view application. "
+    "You are a video layout designer for a multi-camera concert video editing application. "
     "Given a feed count and desired style, return a JSON object with two keys: "
     '"layout" (an object with "name" (string), "slots" (array of objects with '
     '"feed_id", "x", "y", "width", "height" where x/y/width/height are floats 0-1), '
@@ -25,7 +25,7 @@ _SYSTEM_PROMPT = (
 def _build_user_prompt(request: LayoutSuggestionRequest) -> str:
     return (
         f"Create a {request.style} layout for {request.feed_count} camera feeds "
-        f"at a live concert. Return JSON only."
+        f"of recorded concert footage. Return JSON only."
     )
 
 

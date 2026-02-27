@@ -8,20 +8,24 @@ from pydantic import BaseModel, Field
 class Feed(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid4()))
     name: str
-    source_url: str
+    source_url: Optional[str] = ""
     file_path: Optional[str] = None
     duration_seconds: Optional[float] = None
     offset_seconds: float = 0.0
     volume: float = 1.0
+    trim_start: Optional[float] = None
+    trim_end: Optional[float] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class FeedCreate(BaseModel):
     name: str
-    source_url: str
+    source_url: Optional[str] = ""
 
 
 class FeedUpdate(BaseModel):
     name: Optional[str] = None
     offset_seconds: Optional[float] = None
     volume: Optional[float] = None
+    trim_start: Optional[float] = None
+    trim_end: Optional[float] = None

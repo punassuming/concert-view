@@ -1,6 +1,6 @@
 # Concert View
 
-A framework for ingesting multiple video feeds of the same live experience (concerts, events) and composing them into a dynamic multi-angle collage with synchronized audio.
+A single-workstation video curation and editing tool for merging multiple concert camera feeds into a cohesive, polished video. Ingest recorded video files from different angles, synchronize audio, arrange clips on a timeline, compose multi-angle layouts, and export a finished video ready for social media.
 
 ## Architecture
 
@@ -22,18 +22,20 @@ A framework for ingesting multiple video feeds of the same live experience (conc
 
 | Service | Technology | Purpose |
 |---------|-----------|---------|
-| `api` | Python / FastAPI | REST API for feed, layout, and audio management |
-| `processor` | Python / FFmpeg / NumPy | Video composition, audio sync, and optimization |
-| `frontend` | React / Vite | Dashboard UI for managing feeds, layouts, and audio |
+| `api` | Python / FastAPI | REST API for clip, layout, project, and audio management |
+| `processor` | Python / FFmpeg / NumPy | Video composition, timeline rendering, audio sync, optimization, and social media export |
+| `frontend` | React / Vite | Dashboard UI for managing clips, layouts, projects, audio, and export |
 
 ## Features
 
-- **Feed Management** – Register, upload, and manage multiple video feeds
-- **Layout Editor** – Visual layout editor with grid and picture-in-picture presets
+- **Clip Management** – Register and upload local video files from multiple cameras/angles; set per-clip trim points (in/out), volume, and sync offset
+- **Layout Editor** – Visual multi-angle layout editor with grid and picture-in-picture presets
 - **AI-Assisted Layout** – Optional AI suggestions for dynamic layouts (OpenAI / Gemini)
-- **Audio Synchronization** – Cross-correlation-based offset detection between feeds
+- **Audio Synchronization** – Cross-correlation-based offset detection between recorded clips
 - **Audio Optimization** – Loudness normalization and noise reduction via FFmpeg
-- **Video Composition** – Compose multiple feeds into a single output using FFmpeg filter graphs
+- **Video Composition** – Compose multiple clips side-by-side into a single output using FFmpeg filter graphs
+- **Timeline / Project** – Sequence clips in order on a project timeline; trim and arrange them to build the final concert video
+- **Social Media Export** – One-click export to platform-ready formats: Landscape 1080p (16:9) for YouTube, Portrait 1080p (9:16) for TikTok/Reels/Shorts, and Square 1080 (1:1) for Instagram
 - **Docker Compose** – Full stack orchestration with a single command
 
 ## Quick Start
@@ -93,14 +95,14 @@ cd processor && python -m pytest tests/ -v
 
 ## API Endpoints
 
-### Feeds
+### Clips (Feeds)
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/feeds` | List all feeds |
-| POST | `/api/feeds` | Register a new feed |
-| GET | `/api/feeds/{id}` | Get feed details |
-| PATCH | `/api/feeds/{id}` | Update feed settings |
-| DELETE | `/api/feeds/{id}` | Remove a feed |
+| GET | `/api/feeds` | List all clips |
+| POST | `/api/feeds` | Register a new clip |
+| GET | `/api/feeds/{id}` | Get clip details |
+| PATCH | `/api/feeds/{id}` | Update clip settings (trim, volume, offset) |
+| DELETE | `/api/feeds/{id}` | Remove a clip |
 | POST | `/api/feeds/{id}/upload` | Upload video file |
 
 ### Layouts
@@ -113,11 +115,30 @@ cd processor && python -m pytest tests/ -v
 | DELETE | `/api/layouts/{id}` | Remove a layout |
 | POST | `/api/layouts/suggest` | AI-assisted layout suggestion |
 
+### Projects (Timeline)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/projects` | List all projects |
+| POST | `/api/projects` | Create a new project |
+| GET | `/api/projects/{id}` | Get project details |
+| PATCH | `/api/projects/{id}` | Update project clips/settings |
+| DELETE | `/api/projects/{id}` | Remove a project |
+| POST | `/api/projects/{id}/render` | Render project timeline to video file |
+
 ### Audio
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/api/audio/sync` | Analyze audio sync across feeds |
+| POST | `/api/audio/sync` | Analyze audio sync across clips |
 | POST | `/api/audio/optimize` | Optimize audio output |
+
+### Jobs
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/jobs/{id}` | Get job status and result |
+| POST | `/api/jobs/compose` | Compose multi-angle layout to video |
+| POST | `/api/jobs/sync` | Detect audio offset between two files |
+| POST | `/api/jobs/optimize` | Optimize audio of a file |
+| POST | `/api/jobs/export` | Export video to social media format |
 
 ## Configuration
 
