@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.routers import audio, feeds, jobs, layouts
+from app.routers import audio, feeds, jobs, layouts, projects
 
 
 @asynccontextmanager
@@ -29,6 +29,7 @@ app.include_router(feeds.router)
 app.include_router(layouts.router)
 app.include_router(audio.router)
 app.include_router(jobs.router)
+app.include_router(projects.router)
 
 
 @app.get("/health")

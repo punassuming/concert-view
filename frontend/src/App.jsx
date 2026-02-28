@@ -2,11 +2,12 @@ import { useState } from 'react'
 import FeedManager from './components/FeedManager'
 import LayoutEditor from './components/LayoutEditor'
 import AudioControls from './components/AudioControls'
+import ExportPanel from './components/ExportPanel'
 
-const TABS = ['Feeds', 'Layout', 'Audio']
+const TABS = ['Clips', 'Layout', 'Audio', 'Export']
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('Feeds')
+  const [activeTab, setActiveTab] = useState('Clips')
 
   return (
     <div className="app">
@@ -25,9 +26,10 @@ export default function App() {
         </nav>
       </header>
       <main>
-        {activeTab === 'Feeds' && <FeedManager />}
+        {activeTab === 'Clips' && <FeedManager />}
         {activeTab === 'Layout' && <LayoutEditor />}
         {activeTab === 'Audio' && <AudioControls />}
+        {activeTab === 'Export' && <ExportPanel />}
       </main>
     </div>
   )

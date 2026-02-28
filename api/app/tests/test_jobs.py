@@ -146,3 +146,47 @@ async def test_dispatch_optimize():
     assert resp.status_code == 202
     data = resp.json()
     assert data["job_id"] == "task-opt-1"
+
+
+@pytest.mark.asyncio
+async def test_dispatch_export():
+    """POST /api/jobs/export should return 202 with job_id and format."""
+    with patch("app.routers.jobs.celery_app") as mock_celery:
+        mock_task = MagicMock()
+        mock_task.id = "task-export-1"
+        mock_celery.send_task.return_value = mock_task
+
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
+            resp = await client.post(
+                "/api/jobs/export",
+                json={
+                    "input_path": "/data/output/composed.mp4",
+                    "output_filename": "export_portrait.mp4",
+                    "format": "portrait_1080p",
+                },
+            )
+
+    assert resp.status_code == 202
+    data = resp.json()
+    assert data["job_id"] == "task-export-1"
+    assert data["format"] == "portrait_1080p"
+    assert data["state"] == "PENDING"
+
+
+@pytest.mark.asyncio
+async def test_dispatch_export_invalid_format():
+    """POST /api/jobs/export with an unknown format should return 400."""
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
+        resp = await client.post(
+            "/api/jobs/export",
+            json={
+                "input_path": "/data/output/composed.mp4",
+                "output_filename": "export.mp4",
+                "format": "unknown_format",
+            },
+        )
+    assert resp.status_code == 400

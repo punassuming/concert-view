@@ -41,3 +41,24 @@ def optimize_audio_task(
 
     logger.info("Running optimize_audio_task: input=%s output=%s", input_path, output_path)
     return optimize_audio(input_path, output_path, normalize, noise_reduce)
+
+
+@app.task
+def export_task(input_path: str, output_path: str, width: int, height: int) -> str:
+    """Celery task: export a video to a social-media-friendly format."""
+    from processor.export import export_for_social
+
+    logger.info(
+        "Running export_task: input=%s output=%s size=%dx%d",
+        input_path, output_path, width, height,
+    )
+    return export_for_social(input_path, output_path, width, height)
+
+
+@app.task
+def render_timeline_task(project: dict, feed_paths: dict, output_path: str) -> str:
+    """Celery task: render a project timeline to a single output file."""
+    from processor.timeline import render_timeline
+
+    logger.info("Running render_timeline_task: output=%s", output_path)
+    return render_timeline(project, feed_paths, output_path)

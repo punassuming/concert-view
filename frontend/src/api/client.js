@@ -72,3 +72,41 @@ export function syncAudio(data) {
 export function optimizeAudio(data) {
   return request('/audio/optimize', { method: 'POST', body: JSON.stringify(data) })
 }
+
+// Jobs
+export function getJobStatus(jobId) {
+  return request(`/jobs/${jobId}`)
+}
+
+export function exportVideo(data) {
+  return request('/jobs/export', { method: 'POST', body: JSON.stringify(data) })
+}
+
+// Projects
+export function getProjects() {
+  return request('/projects')
+}
+
+export function createProject(data) {
+  return request('/projects', { method: 'POST', body: JSON.stringify(data) })
+}
+
+export function getProject(id) {
+  return request(`/projects/${id}`)
+}
+
+export function updateProject(id, data) {
+  return request(`/projects/${id}`, { method: 'PATCH', body: JSON.stringify(data) })
+}
+
+export async function deleteProject(id) {
+  const res = await fetch(`${BASE_URL}/api/projects/${id}`, { method: 'DELETE' })
+  if (!res.ok) throw new Error(`API error ${res.status}`)
+}
+
+export function renderProject(id, feedPaths, outputFilename) {
+  return request(`/projects/${id}/render?output_filename=${encodeURIComponent(outputFilename)}`, {
+    method: 'POST',
+    body: JSON.stringify(feedPaths),
+  })
+}

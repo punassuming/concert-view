@@ -4,10 +4,11 @@ import { getFeeds, createFeed, updateFeed, deleteFeed, uploadFeedVideo } from '.
 export default function FeedManager() {
   const [feeds, setFeeds] = useState([])
   const [name, setName] = useState('')
-  const [sourceUrl, setSourceUrl] = useState('')
   const [editingId, setEditingId] = useState(null)
   const [editOffset, setEditOffset] = useState(0)
   const [editVolume, setEditVolume] = useState(1.0)
+  const [editTrimStart, setEditTrimStart] = useState('')
+  const [editTrimEnd, setEditTrimEnd] = useState('')
   const [error, setError] = useState(null)
 
   useEffect(() => {
@@ -27,9 +28,8 @@ export default function FeedManager() {
     e.preventDefault()
     if (!name.trim()) return
     try {
-      await createFeed({ name: name.trim(), source_url: sourceUrl.trim() })
+      await createFeed({ name: name.trim() })
       setName('')
-      setSourceUrl('')
       loadFeeds()
     } catch (err) {
       setError(err.message)
@@ -49,11 +49,19 @@ export default function FeedManager() {
     setEditingId(feed.id)
     setEditOffset(feed.offset_seconds || 0)
     setEditVolume(feed.volume || 1.0)
+    setEditTrimStart(feed.trim_start != null ? feed.trim_start : '')
+    setEditTrimEnd(feed.trim_end != null ? feed.trim_end : '')
   }
 
   async function handleUpdate(id) {
     try {
-      await updateFeed(id, { offset_seconds: Number(editOffset), volume: Number(editVolume) })
+      const patch = {
+        offset_seconds: Number(editOffset),
+        volume: Number(editVolume),
+        trim_start: editTrimStart !== '' ? Number(editTrimStart) : null,
+        trim_end: editTrimEnd !== '' ? Number(editTrimEnd) : null,
+      }
+      await updateFeed(id, patch)
       setEditingId(null)
       loadFeeds()
     } catch (err) {
@@ -73,17 +81,13 @@ export default function FeedManager() {
   return (
     <div>
       <div className="card">
-        <h2>Add Feed</h2>
+        <h2>Add Video Clip</h2>
         <form onSubmit={handleCreate} className="inline-form">
           <div className="form-group">
             <label>Name</label>
             <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Camera 1" />
           </div>
-          <div className="form-group">
-            <label>Source URL</label>
-            <input value={sourceUrl} onChange={(e) => setSourceUrl(e.target.value)} placeholder="rtmp://..." />
-          </div>
-          <button type="submit" className="btn btn-primary">Add Feed</button>
+          <button type="submit" className="btn btn-primary">Add Clip</button>
         </form>
       </div>
 
@@ -95,22 +99,38 @@ export default function FeedManager() {
       )}
 
       <div className="card">
-        <h2>Feeds</h2>
+        <h2>Video Clips</h2>
         {feeds.length === 0 ? (
-          <p style={{ color: '#a0a0b0' }}>No feeds yet. Add one above.</p>
+          <p style={{ color: '#a0a0b0' }}>No clips yet. Add one above, then upload a video file.</p>
         ) : (
           <div className="grid">
             {feeds.map((feed) => (
               <div key={feed.id} className="card feed-item">
                 <div className="feed-header">
                   <h3>{feed.name}</h3>
-                  <span className={`status-badge ${feed.status === 'active' ? 'status-active' : 'status-inactive'}`}>
-                    {feed.status || 'inactive'}
+                  <span className={`status-badge ${feed.file_path ? 'status-active' : 'status-inactive'}`}>
+                    {feed.file_path ? 'file loaded' : 'no file'}
                   </span>
                 </div>
+                {feed.file_path && (
+                  <div className="detail-row">
+                    <span>File</span>
+                    <span style={{ fontSize: '0.8rem', wordBreak: 'break-all' }}>{feed.file_path.split('/').pop()}</span>
+                  </div>
+                )}
+                {feed.duration_seconds != null && (
+                  <div className="detail-row">
+                    <span>Duration</span>
+                    <span>{feed.duration_seconds.toFixed(1)}s</span>
+                  </div>
+                )}
                 <div className="detail-row">
-                  <span>Source</span>
-                  <span>{feed.source_url || '—'}</span>
+                  <span>Trim</span>
+                  <span>
+                    {feed.trim_start != null ? `${feed.trim_start}s` : 'start'}
+                    {' → '}
+                    {feed.trim_end != null ? `${feed.trim_end}s` : 'end'}
+                  </span>
                 </div>
                 <div className="detail-row">
                   <span>Offset</span>
@@ -123,6 +143,28 @@ export default function FeedManager() {
 
                 {editingId === feed.id && (
                   <div className="edit-form">
+                    <div className="form-group">
+                      <label>Trim Start (seconds)</label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        placeholder="beginning"
+                        value={editTrimStart}
+                        onChange={(e) => setEditTrimStart(e.target.value)}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Trim End (seconds)</label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        placeholder="end of clip"
+                        value={editTrimEnd}
+                        onChange={(e) => setEditTrimEnd(e.target.value)}
+                      />
+                    </div>
                     <div className="form-group">
                       <label>Offset (seconds)</label>
                       <input
@@ -154,7 +196,7 @@ export default function FeedManager() {
                   <button className="btn btn-sm btn-secondary" onClick={() => startEdit(feed)}>Edit</button>
                   <button className="btn btn-sm btn-danger" onClick={() => handleDelete(feed.id)}>Delete</button>
                   <label className="btn btn-sm btn-secondary" style={{ cursor: 'pointer' }}>
-                    Upload
+                    Upload File
                     <input
                       type="file"
                       accept="video/*,audio/*"
